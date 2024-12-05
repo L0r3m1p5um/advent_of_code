@@ -34,15 +34,14 @@ type Parser {
 }
 
 fn parse(input: String) -> Output {
-  let assert Default(_, parsed) = do_parse(Default(input, []))
-  parsed
+  do_parse(Default(input, []))
 }
 
-fn do_parse(parser: Parser) -> Parser {
+fn do_parse(parser: Parser) -> Output {
   case parser {
     Default("mul(" <> rest, parsed) -> do_parse(Open(rest, parsed))
     Default("don't()" <> rest, parsed) -> do_parse(Disabled(rest, parsed))
-    Default("", _) -> parser
+    Default("", parsed) -> parsed
     Default(input, parsed) -> {
       let assert Ok(#(_, rest)) = string.pop_grapheme(input)
       do_parse(Default(rest, parsed))

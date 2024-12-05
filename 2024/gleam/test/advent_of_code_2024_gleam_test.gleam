@@ -1,6 +1,7 @@
 import day1
 import day2
 import day3
+import day4
 import gleeunit
 import gleeunit/should
 
@@ -31,4 +32,14 @@ pub fn day2_part2_test() {
 pub fn day3_part2_test() {
   let input = day3.read_input("inputs/day3/input.txt")
   day3.part2(input) |> should.equal(85_508_223)
+}
+
+pub fn day4_part1_test() {
+  let #(grid, dimensions) = day4.read_input("inputs/day4/input.txt")
+  day4.part1(grid, dimensions) |> should.equal(2642)
+}
+
+pub fn day4_part2_test() {
+  let #(grid, dimensions) = day4.read_input("inputs/day4/input.txt")
+  day4.part2(grid, dimensions) |> should.equal(1974)
 }
