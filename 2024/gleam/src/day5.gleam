@@ -24,20 +24,14 @@ pub fn part1(rules: List(Rule), updates: List(List(Int))) -> Int {
 fn middle_values(updates: List(List(Int))) -> List(Int) {
   updates
   |> list.map(fn(update) {
-    let assert Ok(drop_length) = int.floor_divide(list.length(update), 2)
-    let assert [mid, ..] = list.drop(update, drop_length)
+    let assert [mid, ..] = list.drop(update, { list.length(update) / 2 })
     mid
   })
 }
 
 fn check_update(rules: List(Rule), update: List(Int)) -> Bool {
   update
-  |> list.fold(Ok(rules), fn(acc, it) {
-    case acc {
-      Ok(rules) -> check_page(rules, it)
-      err -> err
-    }
-  })
+  |> list.fold(Ok(rules), fn(acc, it) { result.try(acc, check_page(_, it)) })
   |> result.is_ok
 }
 
@@ -55,11 +49,11 @@ fn check_page(rules: List(Rule), page: Int) -> Result(List(Rule), Nil) {
     },
     Error(Nil),
   )
-  list.filter(rules, fn(rule) { rule.first != page })
-  |> list.map(fn(rule) {
+  list.filter_map(rules, fn(rule) {
     case rule {
-      Rule(x, y, _) if y == page -> Rule(x, y, True)
-      it -> it
+      Rule(fst, _, _) if fst == page -> Error(Nil)
+      Rule(x, y, _) if y == page -> Ok(Rule(x, y, True))
+      it -> Ok(it)
     }
   })
   |> Ok
