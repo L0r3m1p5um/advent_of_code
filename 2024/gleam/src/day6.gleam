@@ -66,10 +66,11 @@ pub fn part2(input: Board) -> Int {
 
   let candidates =
     input.map
-    |> dict.filter(fn(_, space) {
-      case space {
-        Clear -> True
-        _ -> False
+    |> dict.filter(fn(position, space) {
+      case position, space {
+        p, _ if p == input.guard.position -> False
+        _, Clear -> True
+        _, _ -> False
       }
     })
     |> dict.keys
