@@ -63,24 +63,17 @@ pub fn part2(input: Board) -> Int {
       _ -> False
     }
   }
-
   let candidates =
-    input.map
-    |> dict.filter(fn(position, space) {
-      case position, space {
-        p, _ if p == input.guard.position -> False
-        _, Clear -> True
-        _, _ -> False
-      }
-    })
-    |> dict.keys
+    run_board(input)
+    |> fn(it) { it.history |> set.map(fn(guard) { guard.position }) }
+    |> set.delete(input.guard.position)
 
   candidates
-  |> list.filter(fn(position) {
+  |> set.filter(fn(position) {
     let map = input.map |> dict.insert(position, Blocked)
     check_cycle(Board(..input, map: map))
   })
-  |> list.length
+  |> set.size
 }
 
 fn run_board(board: Board) -> Board {
