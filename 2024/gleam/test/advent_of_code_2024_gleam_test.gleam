@@ -3,6 +3,7 @@ import day2
 import day3
 import day4
 import day5
+import day6
 import gleeunit
 import gleeunit/should
 
@@ -50,8 +51,18 @@ pub fn day5_part1_test() {
   day5.part1(rules, updates) |> should.equal(4996)
 }
 
-
 pub fn day5_part2_test() {
   let #(rules, updates) = day5.read_input("inputs/day5/input.txt")
   day5.part2(rules, updates) |> should.equal(6311)
+}
+
+pub fn day6_part1_test() {
+  let board = day6.read_input("inputs/day6/input.txt")
+  day6.part1(board) |> should.equal(5331)
+}
+
+pub fn day6_part2_test() {
+  // My solution is slow on the real input
+  let board = day6.read_input("inputs/day6/example.txt")
+  day6.part2(board) |> should.equal(6)
 }
