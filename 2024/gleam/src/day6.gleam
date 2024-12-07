@@ -5,12 +5,13 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/set.{type Set}
 import gleam/string
+import parallel_map
 import simplifile
 
 pub fn main() {
   let input = read_input("inputs/day6/input.txt")
-  io.println("Part 1")
-  part1(input) |> io.debug
+  // io.println("Part 1")
+  // part1(input) |> io.debug
   io.println("Part 2")
   part2(input) |> io.debug
 }
@@ -69,11 +70,18 @@ pub fn part2(input: Board) -> Int {
     |> set.delete(input.guard.position)
 
   candidates
-  |> set.filter(fn(position) {
-    let map = input.map |> dict.insert(position, Blocked)
-    check_cycle(Board(..input, map: map))
-  })
-  |> set.size
+  |> set.to_list
+  |> parallel_map.list_pmap(
+    fn(position) {
+      let map = input.map |> dict.insert(position, Blocked)
+      check_cycle(Board(..input, map: map))
+    },
+    parallel_map.MatchSchedulersOnline,
+    20_000,
+  )
+  |> result.all
+  |> result.unwrap([])
+  |> list.length
 }
 
 fn run_board(board: Board) -> Board {
