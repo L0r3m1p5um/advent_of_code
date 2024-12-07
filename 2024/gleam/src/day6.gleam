@@ -81,6 +81,7 @@ pub fn part2(input: Board) -> Int {
   )
   |> result.all
   |> result.unwrap([])
+  |> list.filter(fn(x) { x })
   |> list.length
 }
 
