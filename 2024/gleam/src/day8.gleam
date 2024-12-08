@@ -1,3 +1,4 @@
+import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/int
 import gleam/io
@@ -62,6 +63,7 @@ const primes_to_53 = [
 ]
 
 fn normalize(a: #(Int, Int)) -> #(Int, Int) {
+  // We can use a limited number of primes because we know the input size
   do_normalize(a, primes_to_53)
 }
 
@@ -69,8 +71,11 @@ fn do_normalize(a: #(Int, Int), primes: List(Int)) -> #(Int, Int) {
   case a, primes {
     a, [] -> a
     #(0, 0), _ -> #(0, 0)
-    #(x, y), [prime, ..] if prime > x || prime > y -> a
     #(x, y), [prime, ..rest] -> {
+      use <- bool.guard(
+        { prime > int.absolute_value(x) || prime > int.absolute_value(y) },
+        a,
+      )
       case int.remainder(x, prime), int.remainder(y, prime) {
         Ok(0), Ok(0) -> do_normalize(#({ x / prime }, { y / prime }), primes)
         _, _ -> do_normalize(a, rest)
@@ -92,7 +97,6 @@ fn find_antinodes_pt2(
   second: #(Int, Int),
   bounds: #(Int, Int),
 ) -> List(#(Int, Int)) {
-  // We can use a limited number of primes because we know the input size
   let #(x, y) as step = sub(second, first) |> normalize()
   list.append(
     gen_antinodes(first, step, bounds, []),
