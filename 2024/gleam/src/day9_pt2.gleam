@@ -16,7 +16,7 @@ pub fn main() {
   part2(input) |> io.debug
 }
 
-fn part2(filesystem: Filesystem) -> Int {
+pub fn part2(filesystem: Filesystem) -> Int {
   let indices =
     filesystem.files
     |> dict.keys

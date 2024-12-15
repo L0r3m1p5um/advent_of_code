@@ -6,6 +6,8 @@ import day5
 import day6
 import day7
 import day8
+import day9
+import day9_pt2
 import gleeunit
 import gleeunit/should
 
@@ -91,7 +93,18 @@ pub fn day8_part1_test() {
   let input = day8.read_input("inputs/day8/input.txt")
   day8.part1(input) |> should.equal(261)
 }
+
 pub fn day8_part2_test() {
   let input = day8.read_input("inputs/day8/input.txt")
   day8.part2(input) |> should.equal(898)
+}
+
+pub fn day9_part1_test() {
+  let input = day9.read_input("inputs/day9/input.txt")
+  day9.part1(input) |> should.equal(6_337_921_897_505)
+}
+
+pub fn day9_part2_test() {
+  let input = day9_pt2.read_input("inputs/day9/input.txt")
+  day9_pt2.part2(input) |> should.equal(6_362_722_604_045)
 }
