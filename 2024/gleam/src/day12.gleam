@@ -3,13 +3,14 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/set.{type Set}
 import gleam/string
 import simplifile
 
 pub fn main() {
-  let input = read_input("inputs/day12/example.txt")
+  let input = read_input("inputs/day12/input.txt")
   io.println("Part 1")
   part1(input) |> io.debug
   io.println("Part 2")
@@ -24,13 +25,13 @@ pub type Region {
   Region(letter: String, plots: Set(Plot))
 }
 
-fn part1(map: Dict(#(Int, Int), String)) -> Int {
+pub fn part1(map: Dict(#(Int, Int), String)) -> Int {
   find_all_regions(map)
   |> list.map(price)
   |> int.sum
 }
 
-fn part2(map: Dict(#(Int, Int), String)) -> Int {
+pub fn part2(map: Dict(#(Int, Int), String)) -> Int {
   find_all_regions(map)
   |> list.map(fn(it) {
     let sides =
@@ -213,6 +214,7 @@ fn merge_side(side1: Side, side2: Side) -> MergeResult {
           other -> [[it], ..other]
         }
       })
+      |> list.map(list.reverse)
     }
     let s1_updated =
       update(s1_indices, s2_indices)
