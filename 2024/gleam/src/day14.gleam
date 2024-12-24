@@ -3,7 +3,9 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/pair
 import gleam/regex
+import gleam/set
 import gleam/string
 import parallel_map
 import simplifile
@@ -11,7 +13,9 @@ import simplifile
 pub fn main() {
   let input = read_input("inputs/day14/input.txt")
   io.println("Part 1")
-  part1(input) |> io.debug
+  // part1(input) |> io.debug
+  io.println("Part 2")
+  part2(input)
 }
 
 pub fn part1(input: List(Robot)) {
@@ -19,6 +23,13 @@ pub fn part1(input: List(Robot)) {
   input
   |> list.map(move(_, 100, size))
   |> score(size)
+}
+
+pub fn part2(input: List(Robot)) {
+  let size = #(101, 103)
+  let #(robots, steps) = find_tree(input, size, 0)
+  io.println("Steps " <> int.to_string(steps))
+  robots |> display(size)
 }
 
 fn move(robot: Robot, seconds: Int, dimensions: #(Int, Int)) -> Robot {
@@ -79,23 +90,54 @@ pub type Robot {
   Robot(position: #(Int, Int), velocity: #(Int, Int))
 }
 
-fn display(robots: List(Robot), dimensions: #(Int, Int)) {
-  let map =
-    robots
-    |> list.fold(dict.new(), fn(acc, robot) {
-      dict.upsert(acc, robot.position, fn(it) {
-        case it {
-          Some(count) -> count + 1
-          None -> 1
-        }
-      })
-    })
+fn find_tree(
+  robots: List(Robot),
+  dimensions: #(Int, Int),
+  total_steps: Int,
+) -> #(List(Robot), Int) {
+  case is_tree(robots, dimensions) {
+    True -> #(robots, total_steps)
+    False ->
+      find_tree(
+        { robots |> list.map(move(_, 1, dimensions)) },
+        dimensions,
+        total_steps + 1,
+      )
+  }
+}
 
+fn is_tree(robots: List(Robot), dimensions: #(Int, Int)) -> Bool {
+  let positions =
+    robots
+    |> list.map(fn(it) { it.position })
+    |> set.from_list
+  let most_consecutive =
+    all_coordinates(dimensions)
+    |> list.fold(#(0, 0), fn(acc, it) {
+      let #(current, max) = acc
+      case set.contains(positions, it) {
+        True if current + 1 > max -> #(current + 1, current + 1)
+        True -> #(current + 1, max)
+        False -> #(0, max)
+      }
+    })
+    |> pair.second
+  most_consecutive >= 10
+}
+
+fn all_coordinates(dimensions: #(Int, Int)) -> List(#(Int, Int)) {
+  use x <- list.flat_map(list.range(0, dimensions.0))
+  use y <- list.map(list.range(0, dimensions.1))
+  #(x, y)
+}
+
+fn display(robots: List(Robot), dimensions: #(Int, Int)) {
+  let positions = robots |> list.map(fn(it) { it.position }) |> set.from_list
   use y <- list.each(list.range(0, { dimensions.1 - 1 }))
   use x <- list.each(list.range(0, { dimensions.0 - 1 }))
-  case dict.get(map, #(x, y)) {
-    Ok(count) -> io.print(int.to_string(count))
-    Error(_) -> io.print(".")
+  case set.contains(positions, #(x, y)) {
+    True -> io.print("#")
+    False -> io.print(".")
   }
   case x == dimensions.0 - 1 {
     True -> io.print("\n")
