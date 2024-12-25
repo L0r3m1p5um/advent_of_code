@@ -9,6 +9,7 @@ import gleam/set
 import gleam/string
 import parallel_map
 import simplifile
+import utils
 
 pub fn main() {
   let input = read_input("inputs/day14/input.txt")
@@ -112,7 +113,7 @@ fn is_tree(robots: List(Robot), dimensions: #(Int, Int)) -> Bool {
     |> list.map(fn(it) { it.position })
     |> set.from_list
   let most_consecutive =
-    all_coordinates(dimensions)
+    utils.all_coordinates(dimensions)
     |> list.fold(#(0, 0), fn(acc, it) {
       let #(current, max) = acc
       case set.contains(positions, it) {
@@ -123,12 +124,6 @@ fn is_tree(robots: List(Robot), dimensions: #(Int, Int)) -> Bool {
     })
     |> pair.second
   most_consecutive >= 10
-}
-
-fn all_coordinates(dimensions: #(Int, Int)) -> List(#(Int, Int)) {
-  use x <- list.flat_map(list.range(0, dimensions.0))
-  use y <- list.map(list.range(0, dimensions.1))
-  #(x, y)
 }
 
 fn display(robots: List(Robot), dimensions: #(Int, Int)) {
