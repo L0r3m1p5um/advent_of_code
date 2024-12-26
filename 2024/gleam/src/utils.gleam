@@ -1,6 +1,8 @@
+import gleam/bool
 import gleam/list
 
 pub fn power(x: Int, pow: Int) -> Int {
+  use <- bool.guard(pow == 0, 1)
   do_power(x, pow, x)
 }
 

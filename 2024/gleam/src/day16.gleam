@@ -42,9 +42,14 @@ pub type Node {
   Node(
     position: #(Int, Int),
     direction: Direction,
+    // Current shortest known total distance from start node
     distance: Option(Int),
     is_end: Bool,
+    // Set of nodes reachable from this node, with distance
     neighbors: Set(#(NodeKey, Int)),
+    // Set of coordinates traversed on the shortest path to this
+    // node. If multiple paths have the same shortest length, this
+    // includes the union of traversed coordinates
     path: Set(#(Int, Int)),
   )
 }
@@ -57,13 +62,17 @@ pub type Map {
   Map(
     nodes: Dict(NodeKey, Node),
     visited: Set(NodeKey),
+    // Set of nodes with a known distance from a visited node
     candidates: Set(NodeKey),
   )
 }
 
+// Iterates nodes in the order of the next closest unvisited
+// node using Dijkstra's algorithm
 fn closest_node_iter(start_map: Map) -> Iterator(Node) {
   use map <- iterator.unfold(from: start_map)
-  let next_opt =
+  // Find the closest unvisited node
+  let next_node =
     map.candidates
     |> set.fold(None, fn(acc: Option(Node), it: NodeKey) {
       let assert Ok(next_node) = dict.get(map.nodes, it)
@@ -77,9 +86,10 @@ fn closest_node_iter(start_map: Map) -> Iterator(Node) {
       }
     })
 
-  next_opt
-  |> option.map(fn(it) { Next(it, visit(map, it)) })
-  |> option.unwrap(Done)
+  case next_node {
+    Some(node) -> Next(node, visit(map, node))
+    None -> Done
+  }
 }
 
 fn visit(map: Map, node: Node) -> Map {
@@ -87,6 +97,9 @@ fn visit(map: Map, node: Node) -> Map {
   let assert Some(current_distance) = node.distance
   let updated_visited = set.insert(visited, node_key(node))
   let current_path = set.insert(node.path, node.position)
+
+  // The set of nodes reachable from the current node, with
+  // the distance and path updated
   let adjacent =
     node.neighbors
     |> set.map(fn(it) {
@@ -100,7 +113,6 @@ fn visit(map: Map, node: Node) -> Map {
           Node(..neighbor, distance: Some(total_distance), path: current_path)
         Some(dist) if dist == total_distance ->
           Node(..neighbor, path: set.union(neighbor.path, current_path))
-
         _ -> neighbor
       }
     })

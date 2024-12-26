@@ -4,6 +4,7 @@ import day11
 import day12
 import day13
 import day14
+import day17
 import day2
 import day3
 import day4
@@ -152,4 +153,9 @@ pub fn day13_part2_test() {
 pub fn day14_part1_test() {
   let input = day14.read_input("inputs/day14/input.txt")
   day14.part1(input) |> should.equal(231_852_216)
+}
+
+pub fn day17_part1_test() {
+  let input = day17.read_input("inputs/day17/input.txt")
+  day17.part1(input) |> should.equal("5,1,4,0,5,1,0,2,6")
 }
