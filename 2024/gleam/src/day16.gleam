@@ -6,10 +6,12 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/set.{type Set}
 import gleam/string
+import pocket_watch
 import simplifile
 
 pub fn main() {
   let input = read_input("inputs/day16/input.txt")
+  use <- pocket_watch.simple("Solve")
   let #(part1, part2) = solve(input)
   io.println("Part 1")
   part1 |> io.debug
@@ -21,8 +23,8 @@ pub fn solve(input: Map) {
   let assert Ok(Node(distance: Some(distance), path: path, ..)) =
     closest_node_iter(input)
     |> iterator.find(fn(it) { it.is_end })
-  #(distance, set.size(path) + 1)
   // Add one to include the end itself
+  #(distance, set.size(path) + 1)
 }
 
 pub type Direction {
@@ -61,9 +63,8 @@ pub type Map {
 
 fn closest_node_iter(start_map: Map) -> Iterator(Node) {
   use map <- iterator.unfold(from: start_map)
-  let Map(nodes, visited, candidates) = map
   let next_opt =
-    candidates
+    map.candidates
     |> set.fold(None, fn(acc: Option(Node), it: NodeKey) {
       let assert Ok(next_node) = dict.get(map.nodes, it)
       case acc {
@@ -76,10 +77,8 @@ fn closest_node_iter(start_map: Map) -> Iterator(Node) {
       }
     })
 
-  {
-    use next_node <- option.map(next_opt)
-    Next(next_node, visit(map, next_node))
-  }
+  next_opt
+  |> option.map(fn(it) { Next(it, visit(map, it)) })
   |> option.unwrap(Done)
 }
 
@@ -111,7 +110,7 @@ fn visit(map: Map, node: Node) -> Map {
   let updated_candidates =
     adjacent
     |> set.map(node_key)
-    |> set.difference(updated_visited)
+    |> set.filter(fn(key) { !set.contains(updated_visited, key) })
     |> set.union(candidates)
     |> set.delete(node_key(node))
   Map(
