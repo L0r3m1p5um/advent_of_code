@@ -10,13 +10,19 @@ import simplifile
 
 pub fn main() {
   let input = read_input("inputs/day16/input.txt")
+  let #(part1, part2) = solve(input)
   io.println("Part 1")
-  part1(input) |> io.debug
+  part1 |> io.debug
+  io.println("Part 2")
+  part2 |> io.debug
 }
 
-pub fn part1(input: Map) {
-  closest_node_iter(input)
-  |> iterator.find(fn(it) { it.is_end })
+pub fn solve(input: Map) {
+  let assert Ok(Node(distance: Some(distance), path: path, ..)) =
+    closest_node_iter(input)
+    |> iterator.find(fn(it) { it.is_end })
+  #(distance, set.size(path) + 1)
+  // Add one to include the end itself
 }
 
 pub type Direction {
@@ -37,6 +43,7 @@ pub type Node {
     distance: Option(Int),
     is_end: Bool,
     neighbors: Set(#(NodeKey, Int)),
+    path: Set(#(Int, Int)),
   )
 }
 
@@ -80,6 +87,7 @@ fn visit(map: Map, node: Node) -> Map {
   let Map(nodes, visited, candidates) = map
   let assert Some(current_distance) = node.distance
   let updated_visited = set.insert(visited, node_key(node))
+  let current_path = set.insert(node.path, node.position)
   let adjacent =
     node.neighbors
     |> set.map(fn(it) {
@@ -87,9 +95,13 @@ fn visit(map: Map, node: Node) -> Map {
       let total_distance = distance + current_distance
       let assert Ok(neighbor) = dict.get(nodes, key)
       case neighbor.distance {
-        None -> Node(..neighbor, distance: Some(total_distance))
+        None ->
+          Node(..neighbor, distance: Some(total_distance), path: current_path)
         Some(dist) if dist > total_distance ->
-          Node(..neighbor, distance: Some(total_distance))
+          Node(..neighbor, distance: Some(total_distance), path: current_path)
+        Some(dist) if dist == total_distance ->
+          Node(..neighbor, path: set.union(neighbor.path, current_path))
+
         _ -> neighbor
       }
     })
@@ -158,6 +170,7 @@ fn make_nodes(
       distance: None,
       is_end: False,
       neighbors: find_neighbors(grid, NodeKey(position, dir)),
+      path: set.new(),
     )
   })
 }
