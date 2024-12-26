@@ -7,13 +7,14 @@ import gleam/result
 import gleam/string
 import pocket_watch
 import simplifile
-import util
 import utils
 
 pub fn main() {
   let input = read_input("inputs/day17/input.txt") |> io.debug
   io.println("Part 1")
   part1(input) |> io.debug
+  io.println("Part 2")
+  part2(input) |> io.debug
 }
 
 pub fn part1(input: Computer) -> String {
@@ -26,16 +27,12 @@ pub fn part1(input: Computer) -> String {
   |> string.join(",")
 }
 
-pub fn part2(input: Computer) -> Int {
-  let assert Ok(result) =
-    iterator.iterate(1, fn(it) { it + 1 })
-    |> iterator.find(fn(it) { try_input(input, it) })
-  result
-}
-
-fn try_input(computer: Computer, a_val: Int) -> Bool {
+// Evaluate the program with the given start value of A, and return
+// true if the match argument is equal to the output
+fn try_input(computer: Computer, a_val: Int, match: List(Int)) -> Bool {
   let end =
     write(computer, A, a_val)
+    |> fn(it) { Computer(..it, match_result: Incomplete(match)) }
     |> run
     |> iterator.take_while(fn(it) { it.match_result != NoMatch })
     |> iterator.last
@@ -118,6 +115,56 @@ fn run(start: Computer) -> iterator.Iterator(Computer) {
       computer
       |> run_instruction(inst)
       |> fn(it) { Next(it, it) }
+    }
+  }
+}
+
+fn part2(computer: Computer) -> Int {
+  let assert Incomplete(remaining_program) = computer.match_result
+  do_solve_part2(
+    // This is specific to the input. The loop has adv 3
+    // as the only instruction writing to the A register
+    // so we initially start with 0 -> 2 ^ 3
+    [0, 1, 2, 3, 4, 5, 6, 7],
+    computer,
+    list.reverse(remaining_program),
+    [],
+    8,
+    // for the same reason as above, this is 2 ^ 3
+  )
+}
+
+fn do_solve_part2(
+  candidates: List(Int),
+  computer: Computer,
+  remaining_program: List(Int),
+  matched_program: List(Int),
+  scale: Int,
+) -> Int {
+  let assert [next, ..rest] = remaining_program
+  // This iteration should match all of the previously matched output
+  // plus one additional output
+  let test_program = [next, ..matched_program]
+  let matching_candidates =
+    candidates
+    |> list.filter(try_input(computer, _, test_program))
+  case rest {
+    // All outputs have been matched and we have the result
+    [] -> {
+      let assert Ok(result) = list.reduce(matching_candidates, int.min)
+      result
+    }
+    _ -> {
+      let next_candidates =
+        matching_candidates
+        |> list.flat_map(fn(candidate) {
+          // Due to the flooring when dividing the A register,
+          // each matching candidate will generate multiple
+          // new candidates for the next iteration
+          list.range(0, { scale - 1 })
+          |> list.map(fn(it) { it + { candidate * scale } })
+        })
+      do_solve_part2(next_candidates, computer, rest, test_program, scale)
     }
   }
 }
@@ -244,6 +291,30 @@ fn combo(operand: Int) -> Operand {
     5 -> Combo(B)
     6 -> Combo(C)
     _ -> panic as "Invalid operand"
+  }
+}
+
+fn iteration(registers: Registers) -> #(Registers, Int) {
+  let Registers(a0, _, _) = registers
+  let b1 = int.bitwise_exclusive_or({ a0 % 8 }, 1)
+  let c2_d = utils.power(2, b1)
+  let c2 = a0 / c2_d
+  let b2 = int.bitwise_exclusive_or(b1, 4)
+  let a1_d = utils.power(2, 3)
+  let a1 = a0 / a1_d
+  let b3 = int.bitwise_exclusive_or(b2, c2)
+  let output = b3 % 8
+  #(Registers(a1, b3, c2), output)
+}
+
+fn run_pt2(computer: Computer) {
+  use registers <- iterator.unfold(computer.registers)
+  case registers.a {
+    0 -> Done
+    _ -> {
+      let #(updated, output) = iteration(registers)
+      Next(output, updated)
+    }
   }
 }
 
